@@ -40,6 +40,28 @@ int main(int argc, char* argv[])
 		string pattern = argv[i + 1];
 		regex re(pattern);
 
+		if (!filesystem::exists(path))
+		{
+			cout << "Директорія " << path << " не існує.\n";
+			return 2;
+		}
+
+		if (!filesystem::is_directory(path))
+		{
+			cout << "Шлях " << path << " не є директорією.\n";
+			return 3;
+		}
+
+		try
+		{
+			regex re(pattern);
+		}
+		catch (regex_error& e)
+		{
+			cout << "Помилковий шаблон: " << pattern << "\n";
+			return 4;
+		}
+
 		uintmax_t total_size = 0;
 		uintmax_t hidden_size = 0;
 		uintmax_t readonly_size = 0;
@@ -47,6 +69,8 @@ int main(int argc, char* argv[])
 		uintmax_t noattr_size = 0;
 		uintmax_t pattern_size = 0;
 
+		try
+		{
 		for (const auto& entry : filesystem::recursive_directory_iterator(path))
 		{
 			if (entry.is_regular_file())
@@ -78,6 +102,12 @@ int main(int argc, char* argv[])
 				total_size += entry.file_size();
 			}
 		}
+		}
+		catch (filesystem::filesystem_error& e)
+		{
+			cout << "Помилка при читанні файлів з директорії: " << path << "\n";
+			return 5;
+		}
 
 		cout << "Директорія: " << path << ", Шаблон: " << pattern << "\n";
 		cout << "Загальний розмір файлів у директорії: " << total_size / 1024 << " KB" << "\n";
@@ -86,5 +116,7 @@ int main(int argc, char* argv[])
 		cout << "Загальний розмір файлів лише для читання: " << readonly_size / 1024 << " KB" << "\n";
 		cout << "Загальний розмір архівних файлів: " << archive_size / 1024 << " KB" << "\n";
 		cout << "Загальний розмір файлів без атрибутів: " << noattr_size / 1024 << " KB" << "\n\n";
+		
+		return 0;
 	}
 }
